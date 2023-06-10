@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gqju11e.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -55,6 +55,32 @@ async function run() {
           return res.send(result);
         
       });
+      app.patch('/courses/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+      
+        try {
+          const course = await courseCollection.findOne(filter);
+          if (!course) {
+            return res.status(404).send('Course not found');
+          }
+      
+          const updatedAvailableSeats = course.available_seat - 1;
+      
+          const updateDoc = {
+            $set: {
+              available_seat: updatedAvailableSeats,
+            },
+          };
+      
+          const result = await courseCollection.updateOne(filter, updateDoc);
+          res.send(result);
+        } catch (error) {
+          console.error(error);
+          res.status(500).send('Internal Server Error');
+        }
+      });
+      
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
