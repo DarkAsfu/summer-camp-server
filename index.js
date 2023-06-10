@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
     const courseCollection = client.db("summerCampDb").collection("courses")
     const popularInstructorCollection = client.db("summerCampDb").collection("popularInstructor")
+    const cartCollection = client.db("summerCampDb").collection("carts");
 
     app.get('/courses', async(req, res) =>{
         const cursor = courseCollection.find();
@@ -38,6 +39,14 @@ async function run() {
         res.send(result);
       })
 
+      app.post('/carts', async( req, res) =>{
+        const item = req.body;
+        console.log(item);
+        const result = await cartCollection.insertOne(item);
+        res.send(result);
+      })
+
+      
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
