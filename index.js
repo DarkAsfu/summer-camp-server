@@ -27,6 +27,7 @@ async function run() {
     const courseCollection = client.db("summerCampDb").collection("courses")
     const popularInstructorCollection = client.db("summerCampDb").collection("popularInstructor")
     const cartCollection = client.db("summerCampDb").collection("carts");
+    const userCollection = client.db("summerCampDb").collection("users");
 
     app.get('/courses', async(req, res) =>{
         const cursor = courseCollection.find();
@@ -81,6 +82,18 @@ async function run() {
         }
       });
       
+      app.post('/users', async(req, res) =>{
+        const user =  req.body;
+        console.log(user);
+        const query = {email: user.email}
+        const existingUser = await userCollection.findOne(query);
+        console.log('Existing USER: ',existingUser);
+        if(existingUser){
+          return res.send({message: 'user already exist'})
+        }
+        const result = await userCollection.insertOne(user);
+        res.send(result);
+      })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
