@@ -87,6 +87,24 @@ async function run() {
           res.status(500).send('Internal Server Error');
         }
       });
+      app.post('/courses', async( req, res) =>{
+        const instructorClass = req.body;
+        console.log(instructorClass);
+        const result = await courseCollection.insertOne(instructorClass);
+        res.send(result);
+      })
+      app.get('/courses/instructor/:email', async (req, res) => {
+        const instructorEmail = req.params.email;
+        try {
+          const courses = await courseCollection.find({ instructorEmail }).toArray();
+          res.json(courses);
+        } catch (error) {
+          console.error("Error fetching courses:", error);
+          res.status(500).json({ error: "Internal server error" });
+        }
+      });
+      
+      
       app.get('/users', async(req, res) =>{
         const result = await userCollection.find().toArray();
         res.send(result);
@@ -103,6 +121,7 @@ async function run() {
         const result = await userCollection.insertOne(user);
         res.send(result);
       })
+
       app.patch('/users/admin/:id', async(req, res) => {
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)};
