@@ -3,7 +3,7 @@ const cors = require('cors')
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 const app = express();
-// summercamp XwXfUJLk7xbloYjX
+
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -25,7 +25,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const courseCollection = client.db("summerCampDb").collection("courses")
-    const popularInstructorCollection = client.db("summerCampDb").collection("popularInstructor")
+    const instructorCollection = client.db("summerCampDb").collection("popularInstructor")
     const cartCollection = client.db("summerCampDb").collection("carts");
     const userCollection = client.db("summerCampDb").collection("users");
 
@@ -34,12 +34,18 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
       })
-      app.get('/popularInstructor', async(req, res) =>{
-        const cursor = popularInstructorCollection.find();
+      app.get('/instructor', async(req, res) =>{
+        const cursor = instructorCollection.find();
         const result = await cursor.toArray();
         res.send(result);
       })
 
+      app.post('/instructor', async( req, res) =>{
+        const instructor = req.body;
+        console.log(instructor);
+        const result = await instructorCollection.insertOne(instructor);
+        res.send(result);
+      })
       app.post('/carts', async( req, res) =>{
         const item = req.body;
         console.log(item);
@@ -97,7 +103,28 @@ async function run() {
         const result = await userCollection.insertOne(user);
         res.send(result);
       })
-
+      app.patch('/users/admin/:id', async(req, res) => {
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)};
+        const updateDoc = {
+          $set: {
+            role: 'admin'
+          },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      })
+      app.patch('/users/instructor/:id', async(req, res) => {
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)};
+        const updateDoc = {
+          $set: {
+            role: 'instructor'
+          },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      })
       app.delete('/carts/:id', async(req, res) =>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
