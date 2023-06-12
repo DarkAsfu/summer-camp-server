@@ -155,6 +155,31 @@ async function run() {
         const result = await courseCollection.updateOne(filter, updateDoc);
         res.send(result);
       })
+      app.patch('/courses/deniedStatus/:id', async(req, res) => {
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)};
+        const updateDoc = {
+          $set: {
+            status: 'denied'
+          },
+        };
+        const result = await courseCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      })
+      //////--------------------------
+      app.patch('/instructor/feedback/:id', async (req, res) => {
+        const id = req.params.id;
+        const { feedback } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {feedback}
+        };
+      
+        const result = await courseCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      });
+      
+      //-----------------------------------
       app.delete('/carts/:id', async(req, res) =>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
