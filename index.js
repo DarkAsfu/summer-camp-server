@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors')
 require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const app = express();
@@ -43,6 +44,8 @@ async function run() {
     const instructorCollection = client.db("summerCampDb").collection("popularInstructor")
     const cartCollection = client.db("summerCampDb").collection("carts");
     const userCollection = client.db("summerCampDb").collection("users");
+    const paymentCollection = client.db("summerCampDb").collection("payment");
+    const enrolledCollection = client.db("summerCampDb").collection("enrolled");
 
     app.post('/jwt', (req, res) =>{
       const user = req.body;
@@ -73,7 +76,21 @@ async function run() {
         const result = await cartCollection.insertOne(item);
         res.send(result);
       })
-
+      // app.get('/carts/:id', async (req, res) => {
+      //   const itemId = req.params.id;
+      
+      //   try {
+      //     const result = await cartCollection.findOne({ _id: new ObjectId(itemId) });
+      
+      //     if (result) {
+      //       res.send(result);
+      //     } else {
+      //       res.status(404).json({ message: 'Item not found' });
+      //     }
+      //   } catch (error) {
+      //     res.status(500).json({ message: 'Error retrieving item', error });
+      //   }
+      // });
       app.get('/carts', verifyJWT, async (req, res) => {
        
           const email = req.query.email;
@@ -230,6 +247,54 @@ async function run() {
         const result = await cartCollection.deleteOne(query);
         res.send(result)
       } )
+
+      // create payment
+      app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+        const { price } = req.body;
+        const amount = parseInt(price * 100);
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: 'usd',
+          payment_method_types: ['card']
+        });
+  
+        res.send({
+          clientSecret: paymentIntent.client_secret
+        })
+      })
+  
+  
+      // payment related api
+      app.post('/payment', async (req, res) => {
+        const payment = req.body;
+        const insertResult = await paymentCollection.insertOne(payment);
+        res.send({ insertResult });
+      })
+  
+      app.get('/payment/:email', async (req, res) => {
+        const email = req.params.email;
+      
+        try {
+          const payments = await paymentCollection.find({ email }).toArray();
+      
+          if (payments.length > 0) {
+            res.send(payments);
+          } else {
+            res.status(404).send({ message: 'No payments found' });
+          }
+        } catch (error) {
+          res.status(500).send({ message: 'Error retrieving payments', error });
+        }
+      });
+           
+      app.post('/enrolled', async( req, res) =>{
+        const enrolledClass = req.body;
+        console.log(enrolledClass);
+        const result = await enrolledCollection.insertOne(enrolledClass);
+        res.send(result);
+      })
+      
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
