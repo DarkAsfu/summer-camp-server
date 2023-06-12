@@ -144,6 +144,17 @@ async function run() {
         const result = await userCollection.updateOne(filter, updateDoc);
         res.send(result);
       })
+      app.patch('/courses/approveStatus/:id', async(req, res) => {
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)};
+        const updateDoc = {
+          $set: {
+            status: 'approve'
+          },
+        };
+        const result = await courseCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      })
       app.delete('/carts/:id', async(req, res) =>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
